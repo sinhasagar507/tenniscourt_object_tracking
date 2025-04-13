@@ -1,5 +1,6 @@
 import cv2
 import sys
+import numpy as np
 sys.path.append("../")
 import constants
 from utils import convert_pixel_distance_to_meters, convert_meters_distance_to_pixels
@@ -99,4 +100,27 @@ class MiniCourt():
         self.start_y = self.end_y - self.drawing_rectangle_height # Calculate the starting y-coordinate (top edge) based on end_y and height
 
     def draw_background_rectangle(self, frame):
-        pass
+       # Create an empty canvas with the same shape as the input frame
+       shapes = np.zeros_like(frame, np.uint8)
+
+       # Draw a filled white rectangle on the canvas at the specified coordinates
+       cv2.rectangle(shapes, 
+                    (self.start_x, self.start_y), 
+                    (self.end_x, self.end_y), 
+                    (255, 255, 255),      # White color
+                    cv2.FILLED            # Fill the entire rectangle
+                    )
+
+       alpha = 0.5  # Set the transparency factor for blending
+
+       # Create a boolean mask where the rectangle exists
+       mask = shapes.astype(bool)
+
+       # Blend the original frame with the rectangle using alpha transparency
+       # and apply it only where the mask is true
+       out[mask] = cv2.addWeighted(frame, alpha, shapes, 1 - alpha, 0)[mask]
+
+       # Convert the output from BGR to RGB color space (common for display purposes)
+       out = cv2.cvtColor(out, cv2.COLOR_BGR2RGB)
+
+       return out
